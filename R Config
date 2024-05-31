@@ -1,0 +1,54 @@
+# Google Data Analyst Capstone
+# Cyclist Study Case
+
+#Load all the necessary packages
+library(tidyverse) #calculations
+library(lubridate) #dates 
+library(hms) #time
+library(data.table) #exporting data frame
+
+# Check wheter all the necessary packages is loaded
+search()
+
+# import all the dataset that want to be analyzed
+may05_df <- read_csv("202305-divvy-tripdata.csv") 
+jun06_df <- read_csv("202306-divvy-tripdata.csv") 
+jul07_df <- read_csv("202307-divvy-tripdata.csv")
+aug08_df <- read_csv("202308-divvy-tripdata.csv") 
+sep09_df <- read_csv("202309-divvy-tripdata.csv")
+oct10_df <- read_csv("202310-divvy-tripdata.csv") 
+nov11_df <- read_csv("202311-divvy-tripdata.csv") 
+dec12_df <- read_csv("202312-divvy-tripdata.csv")
+jan01_df <- read_csv("202401-divvy-tripdata.csv")
+feb02_df <- read_csv("202402-divvy-tripdata.csv") 
+mar03_df <- read_csv("202403-divvy-tripdata.csv") 
+apr04_df <- read_csv("202404-divvy-tripdata.csv") 
+
+# merged the datasets into one dataset
+merged_cyclist_df <- rbind(may05_df, jun06_df, jul07_df, aug08_df, sep09_df, oct10_df, nov11_df, dec12_df, jan01_df, feb02_df, mar03_df, apr04_df)
+
+# we now have a merged data set. We don't need a monthly datasets anymore
+remove(may05_df, jun06_df, jul07_df, aug08_df, sep09_df, oct10_df, nov11_df, dec12_df, jan01_df, feb02_df, mar03_df, apr04_df)
+
+
+
+# create a new df (data frame) that will act as a container for new column
+merged_cyclist_df_v2 <- merged_cyclist_df
+
+#From the datasets, we know that there is no column for ride lenght. It can be created by subtracting ended_at time from started_at time
+merged_cyclist_df_v2$ride_lenght <- difftime(merged_cyclist_df$ended_at, merged_cyclist_df$started_at, units = "mins")
+
+# add a new column for our calculation (day of week, month, day, year, time, hour)
+merged_cyclist_df_v2$date <- as.Date(merged_cyclist_df_v2$started_at)
+merged_cyclist_df_v2$day_of_week <- format(as.Date(merged_cyclist_df_v2$date), "%A")
+merged_cyclist_df_v2$month <- format(as.Date(merged_cyclist_df_v2$date), "%m")
+merged_cyclist_df_v2$day <- format(as.Date(merged_cyclist_df_v2$date), "%d")
+merged_cyclist_df_v2$year <- format(as.Date(merged_cyclist_df_v2$date), "%Y")
+
+# after we confirm that the new column was created successfully, now we start the cleaning process
+# starting with elimated any NA values
+merged_cyclist_df_v2<- na.omit(merged_cyclist_df_v2)
+
+# remove any duplicate rows from the dataframe
+merged_cyclist_df_v2 <- merged_cyclist_df_v2 %>%
+  distinct()
