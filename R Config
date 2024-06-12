@@ -2,15 +2,18 @@
 # Cyclist Study Case
 
 #Load all the necessary packages
-library(tidyverse) #calculations
-library(lubridate) #dates 
-library(hms) #time
-library(data.table) #exporting data frame
+library(tidyverse) 
+library(lubridate)
+library(readr)
+library(ggplot2)
+library(dplyr)
+library(hms) 
+library(data.table) 
 
-# Check wheter all the necessary packages is loaded
+# Check whether all the necessary packages is loaded
 search()
 
-# import all the dataset that want to be analyzed
+# import all the datasets that want to be analyzed
 may05_df <- read_csv("202305-divvy-tripdata.csv") 
 jun06_df <- read_csv("202306-divvy-tripdata.csv") 
 jul07_df <- read_csv("202307-divvy-tripdata.csv")
@@ -29,8 +32,6 @@ merged_cyclist_df <- rbind(may05_df, jun06_df, jul07_df, aug08_df, sep09_df, oct
 
 # we now have a merged data set. We don't need a monthly datasets anymore
 remove(may05_df, jun06_df, jul07_df, aug08_df, sep09_df, oct10_df, nov11_df, dec12_df, jan01_df, feb02_df, mar03_df, apr04_df)
-
-
 
 # create a new df (data frame) that will act as a container for new column
 merged_cyclist_df_v2 <- merged_cyclist_df
@@ -52,3 +53,53 @@ merged_cyclist_df_v2<- na.omit(merged_cyclist_df_v2)
 # remove any duplicate rows from the dataframe
 merged_cyclist_df_v2 <- merged_cyclist_df_v2 %>%
   distinct()
+
+# remove the any data where the lenght is 0 or negative since it's not valid
+merged_cyclist_df_v2 <- merged_cyclist_df_v2[!(merged_cyclist_df_v2$ride_lenght <=0),]
+
+
+
+# since I want to do the visualization on Tableau, I want to create some additional column for seasons
+# I also want to change the month into its name instead of just number
+merged_cyclist_df_v2 <- merged_cyclist_df_v2 %>% mutate(season =
+                                                          case_when( month == "05" ~ "Spring",
+                                                                     month == "06" ~ "Summer",
+                                                                     month == "07" ~ "Summer",
+                                                                     month == "08" ~ "Summer",
+                                                                     month == "09" ~ "Autumn",
+                                                                     month == "10" ~ "Autumn",
+                                                                     month == "11" ~ "Autumn",
+                                                                     month == "12" ~ "Winter",
+                                                                     month == "01" ~ "Winter",
+                                                                     month == "02" ~ "Winter",
+                                                                     month == "03" ~ "Spring",
+                                                                     month == "04" ~ "Spring"))
+
+# change the month name to its actual name
+merged_cyclist_df_v2 <- merged_cyclist_df_v2 %>% mutate(month = 
+                                                          case_when( month == "01" ~ "January",
+                                                                     month == "02" ~ "February",
+                                                                     month == "03" ~ "March",
+                                                                     month == "04" ~ "April",
+                                                                     month == "05" ~ "May",
+                                                                     month == "06" ~ "June",
+                                                                     month == "07" ~ "July",
+                                                                     month == "08" ~ "August",
+                                                                     month == "09" ~ "September",
+                                                                     month == "10" ~ "October",
+                                                                     month == "11" ~ "November",
+                                                                     month == "12" ~ "December"))
+
+# Change the format of ride_length 
+merged_cyclist_df_v2$ride_lenght <- as.numeric(as.character(merged_cyclist_df_v2$ride_lenght))
+is.numeric(merged_cyclist_df_v2$ride_lenght)
+
+# Create a new df for tableau visualization
+merged_cyclist_tableau <- merged_cyclist_df_v2
+
+# Clean some data by deleting some column that we will not use on tableau
+merged_cyclist_tableau <- merged_cyclist_tableau %>%
+  select(-c(start_station_name, end_station_name, started_at, ended_at))
+
+# Download the new dataset
+fwrite(merged_cyclist_tableau, "tableau_cyclist_data.csv")
